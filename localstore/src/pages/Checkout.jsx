@@ -8,12 +8,19 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(storedCart);
-
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser) {
+      alert("Please sign in first!");
+      navigate("/signin");
+      return;
+    }
     setUser(currentUser);
-  }, []);
+
+    // Load current user's cart
+    const allCarts = JSON.parse(localStorage.getItem("carts")) || {};
+    const userCart = allCarts[currentUser.email] || [];
+    setCart(userCart);
+  }, [navigate]);
 
   const totalPrice = cart.reduce((acc, item) => acc + Number(item.price), 0);
 
@@ -27,10 +34,14 @@ export default function Checkout() {
 
     // Simulate payment/checkout delay
     setTimeout(() => {
-      localStorage.removeItem("cart");
+      // Clear only current user's cart
+      const allCarts = JSON.parse(localStorage.getItem("carts")) || {};
+      allCarts[user.email] = [];
+      localStorage.setItem("carts", JSON.stringify(allCarts));
+
       setCart([]);
       setIsProcessing(false);
-      alert("Checkout successful! Thank you for your purchase.");
+      alert("Checkout successful! Thank you for your purchase.🤝");
       navigate("/products");
     }, 1500);
   };

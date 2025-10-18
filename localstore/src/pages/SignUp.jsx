@@ -26,6 +26,12 @@ const SignUp = () => {
     existingUsers.push(user);
     localStorage.setItem("users", JSON.stringify(existingUsers));
 
+    // Initialize user's cart in localStorage
+    const userCartKey = `cart_${user.email}`;
+    if (!localStorage.getItem(userCartKey)) {
+      localStorage.setItem(userCartKey, JSON.stringify([]));
+    }
+
     alert("Sign up successful! You can now sign in.");
     navigate("/signin");
   };

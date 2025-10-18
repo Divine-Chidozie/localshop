@@ -4,18 +4,36 @@ import { useNavigate } from "react-router-dom";
 export default function Cart() {
   const navigate = useNavigate();
   const [cart, setCart] = useState([]);
+  const [user, setUser] = useState(null);
 
+  // Load current user and their cart
   useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(storedCart);
-  }, []);
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser) {
+      alert("Please sign in first!");
+      navigate("/signin");
+      return;
+    }
+    setUser(currentUser);
 
+    // Load cart specific to the user
+    const allCarts = JSON.parse(localStorage.getItem("carts")) || {};
+    const userCart = allCarts[currentUser.email] || [];
+    setCart(userCart);
+  }, [navigate]);
+
+  // Remove an item from cart
   const handleRemove = (id) => {
     const updatedCart = cart.filter((item) => item.id !== id);
     setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+
+    // Update localStorage for the specific user
+    const allCarts = JSON.parse(localStorage.getItem("carts")) || {};
+    allCarts[user.email] = updatedCart;
+    localStorage.setItem("carts", JSON.stringify(allCarts));
   };
 
+  // Proceed to checkout
   const handleCheckout = () => {
     if (cart.length === 0) {
       alert("Your cart is empty!");
@@ -24,6 +42,7 @@ export default function Cart() {
     navigate("/checkout");
   };
 
+  // Calculate total price
   const totalPrice = cart.reduce((acc, item) => acc + Number(item.price), 0);
 
   return (

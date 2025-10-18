@@ -16,8 +16,9 @@ export default function MyProducts() {
     setUser(currentUser);
 
     const allProducts = JSON.parse(localStorage.getItem("products")) || [];
+    // Filter products added by current user
     const filtered = allProducts.filter(
-      (item) => item.ownerEmail === currentUser.email
+      (item) => item.addedBy === currentUser.email
     );
     setMyProducts(filtered);
   }, [navigate]);
@@ -28,6 +29,10 @@ export default function MyProducts() {
     localStorage.setItem("products", JSON.stringify(updated));
     setMyProducts(myProducts.filter((item) => item.id !== id));
     alert("Product deleted!");
+  };
+
+  const handleEdit = (product) => {
+    navigate("/addproduct", { state: { productToEdit: product } });
   };
 
   return (
@@ -43,17 +48,34 @@ export default function MyProducts() {
           {myProducts.map((product) => (
             <div
               key={product.id}
-              className="bg-gray-800 p-4 rounded-lg shadow-lg flex flex-col"
+              className="bg-gray-800 p-4 rounded-lg shadow-lg flex flex-col items-center"
             >
+              {product.image && (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-40 object-cover rounded mb-3"
+                />
+              )}
               <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
-              <p className="text-gray-400 mb-2">{product.description}</p>
+              {product.description && (
+                <p className="text-gray-400 mb-2">{product.description}</p>
+              )}
               <p className="text-green-400 font-bold mb-3">${product.price}</p>
-              <button
-                onClick={() => handleDelete(product.id)}
-                className="bg-red-600 hover:bg-red-700 text-white py-1 rounded"
-              >
-                Delete
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(product)}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-2 rounded"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(product.id)}
+                  className="bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -70,4 +92,3 @@ export default function MyProducts() {
     </div>
   );
 }
-  

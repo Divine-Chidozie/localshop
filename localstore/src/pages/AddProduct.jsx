@@ -1,19 +1,44 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function AddProduct() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [product, setProduct] = useState({ name: "", price: "", image: "" });
   const [products, setProducts] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
-  // check if a user is logged in
+  // Check if a user is logged in
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser"));
     if (!user) {
       alert("Please sign in first!");
       navigate("/signin");
+    } else {
+      setCurrentUser(user);
     }
   }, [navigate]);
+
+  // Load products
+  useEffect(() => {
+    const savedProducts = JSON.parse(localStorage.getItem("products")) || [];
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (user) {
+      setProducts(savedProducts.filter((p) => p.addedBy === user.email));
+    }
+  }, []);
+
+  // Check if we came here to edit a product
+  useEffect(() => {
+    if (location.state && location.state.productToEdit) {
+      const p = location.state.productToEdit;
+      setProduct({ name: p.name, price: p.price, image: p.image });
+      setIsEditing(true);
+      setEditingId(p.id);
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     setProduct({ ...product, [e.target.name]: e.target.value });
@@ -31,28 +56,43 @@ export default function AddProduct() {
 
     const existingProducts = JSON.parse(localStorage.getItem("products")) || [];
 
-    const newProduct = {
-      id: Date.now(),
-      ...product,
-      addedBy: user.email, // helps us know who added it
-    };
+    if (isEditing) {
+      // Update existing product
+      const updatedProducts = existingProducts.map((p) =>
+        p.id === editingId ? { ...p, ...product } : p
+      );
+      localStorage.setItem("products", JSON.stringify(updatedProducts));
+      setProducts(updatedProducts.filter((p) => p.addedBy === user.email));
+      alert("Product updated successfully!");
+    } else {
+      // Add new product
+      const newProduct = {
+        id: Date.now(),
+        ...product,
+        addedBy: user.email,
+      };
+      existingProducts.push(newProduct);
+      localStorage.setItem("products", JSON.stringify(existingProducts));
+      setProducts(existingProducts.filter((p) => p.addedBy === user.email));
+      alert("Product added successfully!");
+    }
 
-    existingProducts.push(newProduct);
-    localStorage.setItem("products", JSON.stringify(existingProducts));
-
-    alert("Product added successfully!");
+    // Reset form
     setProduct({ name: "", price: "", image: "" });
-    setProducts(existingProducts);
+    setIsEditing(false);
+    setEditingId(null);
   };
 
-  useEffect(() => {
-    const savedProducts = JSON.parse(localStorage.getItem("products")) || [];
-    setProducts(savedProducts);
-  }, []);
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    navigate("/signin");
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center py-10">
-      <h1 className="text-3xl font-bold mb-6">Add Product</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        {isEditing ? "Edit Product" : "Add Product"}
+      </h1>
       <form
         onSubmit={handleSubmit}
         className="bg-gray-800 p-6 rounded-lg shadow-lg w-96"
@@ -88,7 +128,7 @@ export default function AddProduct() {
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-semibold"
         >
-          Add Product
+          {isEditing ? "Update Product" : "Add Product"}
         </button>
       </form>
 
@@ -120,7 +160,7 @@ export default function AddProduct() {
       </div>
 
       <button
-        onClick={() => navigate("/signin")}
+        onClick={handleLogout}
         className="mt-8 bg-red-600 hover:bg-red-700 p-2 rounded"
       >
         Logout

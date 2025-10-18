@@ -28,8 +28,14 @@ export default function SignIn() {
     // Save logged in user
     localStorage.setItem("currentUser", JSON.stringify(validUser));
 
+    // Ensure this user has their own cart in localStorage
+    const userCartKey = `cart_${validUser.email}`;
+    if (!localStorage.getItem(userCartKey)) {
+      localStorage.setItem(userCartKey, JSON.stringify([]));
+    }
+
     alert(`Welcome back, ${validUser.name}!`);
-    navigate("/addproduct");
+    navigate("/products"); // redirect to products page
   };
 
   return (
