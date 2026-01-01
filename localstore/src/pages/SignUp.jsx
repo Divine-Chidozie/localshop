@@ -18,7 +18,7 @@ const SignUp = () => {
     // Check if user already exists
     const userExists = existingUsers.find((u) => u.email === user.email);
     if (userExists) {
-      alert("User already exists! Please sign in.");
+      alert("User already exists! Please sign in");
       return;
     }
 
